@@ -22,10 +22,12 @@ import java.net.URL;
 
 public class DrawRoute extends AsyncTask<String, Void, String> {
 
+    private final DrawRouteMaps.TimeCallbackInterface time;
     private GoogleMap mMap;
 
-    public DrawRoute(GoogleMap mMap) {
+    public DrawRoute(GoogleMap mMap, DrawRouteMaps.TimeCallbackInterface time) {
         this.mMap = mMap;
+        this.time = time;
     }
 
     @Override
@@ -43,7 +45,7 @@ public class DrawRoute extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
-        RouteDrawerTask routeDrawerTask = new RouteDrawerTask(mMap);
+        RouteDrawerTask routeDrawerTask = new RouteDrawerTask(mMap, time);
         routeDrawerTask.execute(result);
     }
 

@@ -1,7 +1,6 @@
 package com.ahmadrosid.lib.drawroutemap;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
@@ -17,6 +16,10 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class DrawRouteMaps {
 
+    public interface TimeCallbackInterface {
+        void onTimeResult(String time);
+    }
+
     private static DrawRouteMaps instance;
     private Context context;
 
@@ -26,9 +29,9 @@ public class DrawRouteMaps {
         return instance;
     }
 
-    public DrawRouteMaps draw(LatLng origin, LatLng destination, GoogleMap googleMap){
+    public DrawRouteMaps draw(LatLng origin, LatLng destination, GoogleMap googleMap, TimeCallbackInterface timeCallback){
         String url_route = FetchUrl.getUrl(origin, destination, instance.context.getResources().getString(R.string.google_maps_key));
-        DrawRoute drawRoute = new DrawRoute(googleMap);
+        DrawRoute drawRoute = new DrawRoute(googleMap, timeCallback);
         drawRoute.execute(url_route);
         return instance;
     }

@@ -1,13 +1,16 @@
 package com.ahmadrosid.lib.drawroutemap;
 
 import android.os.AsyncTask;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.util.Pair;
+
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -22,20 +25,23 @@ import java.util.List;
  * @Github https://github.com/ar-android
  * @Web http://ahmadrosid.com
  */
-public class RouteDrawerTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+public class RouteDrawerTask extends AsyncTask<String, Integer, Pair<String, List<List<HashMap<String, String>>>>> {
 
+    private final DrawRouteMaps.TimeCallbackInterface time;
     private PolylineOptions lineOptions;
     private GoogleMap mMap;
     private int routeColor;
 
-    public RouteDrawerTask(GoogleMap mMap) {
+    public RouteDrawerTask(GoogleMap mMap, DrawRouteMaps.TimeCallbackInterface time) {
         this.mMap = mMap;
+        this.time = time;
     }
 
     @Override
-    protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
+    protected Pair<String, List<List<HashMap<String, String>>>> doInBackground(String... jsonData) {
         JSONObject jObject;
         List<List<HashMap<String, String>>> routes = null;
+        String time = "";
 
         try {
             jObject = new JSONObject(jsonData[0]);
@@ -43,6 +49,11 @@ public class RouteDrawerTask extends AsyncTask<String, Integer, List<List<HashMa
             DataRouteParser parser = new DataRouteParser();
             Log.d("RouteDrawerTask", parser.toString());
 
+            try {
+                time = (String) ((JSONObject)((JSONObject)((JSONArray)((JSONObject)((JSONArray)jObject.get("routes")).get(0)).get("legs")).get(0)).get("duration")).get("text");
+            } catch (Exception e) {
+                Log.d("RouteDrawerTask", e.toString());
+            }
             // Starts parsing data
             routes = parser.parse(jObject);
             Log.d("RouteDrawerTask", "Executing routes");
@@ -52,13 +63,20 @@ public class RouteDrawerTask extends AsyncTask<String, Integer, List<List<HashMa
             Log.d("RouteDrawerTask", e.toString());
             e.printStackTrace();
         }
-        return routes;
+        return new Pair(time, routes);
     }
 
     @Override
-    protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-        if (result != null)
-            drawPolyLine(result);
+    protected void onPostExecute(Pair<String, List<List<HashMap<String, String>>>> result) {
+        if (result.second != null)
+            drawPolyLine(result.second);
+        if (result.first != null)
+            drawTime(result.first);
+    }
+
+    private void drawTime(String time) {
+        Log.d("RouteDrawerTask", time);
+        this.time.onTimeResult(time);
     }
 
     private void drawPolyLine(List<List<HashMap<String, String>>> result) {
